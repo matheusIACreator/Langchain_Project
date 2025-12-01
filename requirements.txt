@@ -1,0 +1,61 @@
+# Core LangChain
+langchain
+langchain-community
+langchain-core
+langchain-huggingface
+
+# Hugging Face
+transformers
+sentence-transformers
+huggingface-hub
+accelerate
+bitsandbytes
+
+# Vector Store - ChromaDB
+chromadb
+chromadb-client
+
+# Document Processing
+pypdf
+PyPDF2
+pdfplumber
+
+# Text Processing
+tiktoken
+unstructured
+
+# Environment & Config
+python-dotenv
+pydantic
+pydantic-settings
+
+# Utilities
+numpy
+pandas
+
+# Optional Tools (Wikipedia, calculadora, etc)
+wikipedia
+numexpr
+
+# Testing
+pytest
+pytest-asyncio
+
+# Notebooks
+jupyter
+ipykernel
+notebook
+
+# Memory Management
+langchain-memory
+
+# Progress bars
+tqdm
+
+# Torch (CPU version - mude para GPU se tiver CUDA)
+torch
+torchvision
+torchaudio
+
+# Monitoring (opcional)
+langsmith

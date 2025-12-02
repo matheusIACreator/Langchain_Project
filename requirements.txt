@@ -2,6 +2,7 @@
 langchain>=0.3.0
 langchain-community>=0.3.0
 langchain-core>=0.3.0
+langchain-text-splitters>=0.3.0
 langchain-huggingface>=0.1.0
 
 # Hugging Face
@@ -9,7 +10,7 @@ transformers>=4.40.0
 sentence-transformers>=3.0.0
 huggingface-hub>=0.20.0
 accelerate>=0.30.0
-# bitsandbytes - removido temporariamente (problemas com Python 3.13)
+bitsandbytes>=0.41.0  # Para quantização 4-bit (QLoRA)
 
 # Vector Store - ChromaDB
 chromadb>=0.5.0
@@ -28,8 +29,8 @@ pydantic>=2.0.0
 pydantic-settings>=2.0.0
 
 # Utilities
-numpy>=2.0.0  # NumPy 2.x tem wheels pré-compilados para Python 3.13
-pandas>=2.2.0
+numpy>=1.24.0  # NumPy 1.x é mais estável, mas 2.x também funciona
+pandas>=2.0.0
 
 # Optional Tools (Wikipedia, calculadora, etc)
 wikipedia>=1.4.0
@@ -38,6 +39,9 @@ numexpr>=2.10.0
 # Testing
 pytest>=8.0.0
 pytest-asyncio>=0.23.0
+
+# Interface
+gradio>=4.0.0
 
 # Notebooks
 jupyter>=1.0.0

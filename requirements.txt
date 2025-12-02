@@ -1,61 +1,56 @@
 # Core LangChain
-langchain
-langchain-community
-langchain-core
-langchain-huggingface
+langchain>=0.3.0
+langchain-community>=0.3.0
+langchain-core>=0.3.0
+langchain-huggingface>=0.1.0
 
 # Hugging Face
-transformers
-sentence-transformers
-huggingface-hub
-accelerate
-bitsandbytes
+transformers>=4.40.0
+sentence-transformers>=3.0.0
+huggingface-hub>=0.20.0
+accelerate>=0.30.0
+# bitsandbytes - removido temporariamente (problemas com Python 3.13)
 
 # Vector Store - ChromaDB
-chromadb
-chromadb-client
+chromadb>=0.5.0
 
 # Document Processing
-pypdf
-PyPDF2
-pdfplumber
+pypdf>=5.0.0
+pdfplumber>=0.11.0
 
 # Text Processing
-tiktoken
-unstructured
+tiktoken>=0.7.0
+# unstructured - removido temporariamente (problemas com Python 3.13)
 
 # Environment & Config
-python-dotenv
-pydantic
-pydantic-settings
+python-dotenv>=1.0.0
+pydantic>=2.0.0
+pydantic-settings>=2.0.0
 
 # Utilities
-numpy
-pandas
+numpy>=2.0.0  # NumPy 2.x tem wheels pré-compilados para Python 3.13
+pandas>=2.2.0
 
 # Optional Tools (Wikipedia, calculadora, etc)
-wikipedia
-numexpr
+wikipedia>=1.4.0
+numexpr>=2.10.0
 
 # Testing
-pytest
-pytest-asyncio
+pytest>=8.0.0
+pytest-asyncio>=0.23.0
 
 # Notebooks
-jupyter
-ipykernel
-notebook
-
-# Memory Management
-langchain-memory
+jupyter>=1.0.0
+ipykernel>=6.25.0
+notebook>=7.0.0
 
 # Progress bars
-tqdm
+tqdm>=4.65.0
 
-# Torch (CPU version - mude para GPU se tiver CUDA)
-torch
-torchvision
-torchaudio
+# Torch (instala automaticamente a versão correta para o sistema)
+torch>=2.0.0
+torchvision>=0.15.0
+torchaudio>=2.0.0
 
 # Monitoring (opcional)
-langsmith
+# langsmith - opcional, pode instalar depois se necessário

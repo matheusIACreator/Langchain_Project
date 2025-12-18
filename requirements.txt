@@ -58,3 +58,17 @@ torchaudio>=2.0.0
 
 # Monitoring (opcional)
 # langsmith - opcional, pode instalar depois se necessário
+# === Scaling Requirements (v2.0) ===
+
+# NER e Processamento de Linguagem
+spacy>=3.7.0
+
+# Sparse Retrieval
+rank-bm25>=0.2.2
+
+# Web Scraping (Wikipedia download)
+beautifulsoup4>=4.12.0
+requests>=2.31.0
+
+# Visualizações (opcional)
+plotly>=5.18.0

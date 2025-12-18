@@ -1,6 +1,7 @@
 """
-Wikipedia Figure Downloader
-Baixa biografias da Wikipedia e converte para formato processável
+Wikipedia API Downloader
+Usa a API oficial da Wikipedia para baixar biografias
+Mais confiável que web scraping
 """
 
 import sys
@@ -8,19 +9,19 @@ import argparse
 from pathlib import Path
 from typing import List, Dict
 import requests
-from bs4 import BeautifulSoup
-import re
+import json
+import time
 
 # Adiciona o diretório raiz ao path
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 
 
-class WikipediaDownloader:
+class WikipediaAPIDownloader:
     """
-    Baixa e processa biografias da Wikipedia
+    Baixa biografias usando a API oficial da Wikipedia
     """
     
-    def __init__(self, language: str = "pt"):
+    def __init__(self, language: str = "en"):
         """
         Inicializa o downloader
         
@@ -28,11 +29,17 @@ class WikipediaDownloader:
             language: Código do idioma (pt, en, etc)
         """
         self.language = language
-        self.base_url = f"https://{language}.wikipedia.org/wiki/"
+        self.api_url = f"https://{language}.wikipedia.org/w/api.php"
+        
+        # Headers educados
+        self.headers = {
+            'User-Agent': 'HistoricalFiguresBot/2.0 (Educational Project)',
+            'Accept': 'application/json'
+        }
         
     def download_figure_bio(self, figure_name: str, output_dir: Path) -> bool:
         """
-        Baixa biografia de uma figura
+        Baixa biografia usando API
         
         Args:
             figure_name: Nome da figura (ex: "Isaac_Newton")
@@ -44,131 +51,141 @@ class WikipediaDownloader:
         print(f"\n📥 Baixando biografia de {figure_name}...")
         
         try:
-            # Construir URL
-            url = self.base_url + figure_name.replace(" ", "_")
-            print(f"   URL: {url}")
+            # Normalizar nome
+            page_title = figure_name.replace("_", " ")
             
-            # Fazer request
-            response = requests.get(url)
+            # Parâmetros da API
+            params = {
+                'action': 'query',
+                'format': 'json',
+                'titles': page_title,
+                'prop': 'extracts|info',
+                'explaintext': True,  # Texto puro sem HTML
+                'exsectionformat': 'plain',
+                'inprop': 'url'
+            }
+            
+            print(f"   Consultando API da Wikipedia...")
+            
+            # Fazer requisição
+            response = requests.get(
+                self.api_url,
+                params=params,
+                headers=self.headers,
+                timeout=15
+            )
             response.raise_for_status()
             
-            # Parsear HTML
-            soup = BeautifulSoup(response.text, 'html.parser')
+            data = response.json()
             
-            # Extrair conteúdo
-            content = self._extract_content(soup, figure_name)
+            # Extrair página
+            pages = data.get('query', {}).get('pages', {})
             
-            if not content:
-                print(f"❌ Falha ao extrair conteúdo")
+            if not pages:
+                print(f"❌ Nenhuma página encontrada")
                 return False
             
-            # Salvar como texto
+            # Pegar primeira (e única) página
+            page = list(pages.values())[0]
+            
+            # Verificar se página existe
+            if 'missing' in page:
+                print(f"❌ Página não existe: {page_title}")
+                return False
+            
+            # Extrair conteúdo
+            title = page.get('title', figure_name)
+            extract = page.get('extract', '')
+            url = page.get('fullurl', '')
+            
+            if not extract:
+                print(f"❌ Conteúdo vazio")
+                return False
+            
+            # Estruturar conteúdo
+            content = self._structure_content(title, extract, url)
+            
+            # Salvar
             output_file = output_dir / f"{figure_name.lower().replace(' ', '_')}.txt"
             self._save_content(content, output_file)
             
-            print(f"✅ Biografia salva: {output_file}")
+            print(f"✅ Biografia salva: {output_file.name}")
+            print(f"   Tamanho: {len(extract)} caracteres")
+            
             return True
             
+        except requests.exceptions.RequestException as e:
+            print(f"❌ Erro de rede: {str(e)}")
+            return False
         except Exception as e:
-            print(f"❌ Erro ao baixar {figure_name}: {str(e)}")
+            print(f"❌ Erro ao processar {figure_name}: {str(e)}")
             return False
     
-    def _extract_content(self, soup: BeautifulSoup, figure_name: str) -> Dict:
+    def _structure_content(self, title: str, extract: str, url: str) -> Dict:
         """
-        Extrai conteúdo relevante da página
+        Estrutura o conteúdo extraído
         
         Args:
-            soup: BeautifulSoup object
-            figure_name: Nome da figura
+            title: Título da página
+            extract: Texto extraído
+            url: URL da página
             
         Returns:
             Dict com conteúdo estruturado
         """
-        content = {
-            'title': figure_name,
-            'summary': '',
-            'sections': []
+        # Dividir em parágrafos
+        paragraphs = [p.strip() for p in extract.split('\n') if p.strip()]
+        
+        # Primeiro parágrafo é geralmente o resumo
+        summary = paragraphs[0] if paragraphs else ""
+        
+        # Tentar identificar seções (básico)
+        sections = []
+        current_section = {"title": "Main Content", "paragraphs": []}
+        
+        for para in paragraphs:
+            # Heurística simples: parágrafos muito curtos podem ser títulos
+            if len(para) < 50 and para.isupper():
+                if current_section["paragraphs"]:
+                    sections.append(current_section)
+                current_section = {"title": para, "paragraphs": []}
+            else:
+                current_section["paragraphs"].append(para)
+        
+        if current_section["paragraphs"]:
+            sections.append(current_section)
+        
+        return {
+            'title': title,
+            'url': url,
+            'summary': summary,
+            'sections': sections
         }
-        
-        # Extrair resumo (primeiro parágrafo)
-        first_para = soup.find('div', class_='mw-parser-output').find('p')
-        if first_para:
-            content['summary'] = self._clean_text(first_para.get_text())
-        
-        # Extrair seções
-        current_section = None
-        for element in soup.find('div', class_='mw-parser-output').children:
-            # Detectar heading (seção)
-            if element.name in ['h2', 'h3', 'h4']:
-                if current_section:
-                    content['sections'].append(current_section)
-                
-                section_title = self._clean_text(element.get_text())
-                current_section = {
-                    'title': section_title,
-                    'content': []
-                }
-            
-            # Adicionar parágrafo à seção atual
-            elif element.name == 'p' and current_section:
-                text = self._clean_text(element.get_text())
-                if text:
-                    current_section['content'].append(text)
-        
-        # Adicionar última seção
-        if current_section:
-            content['sections'].append(current_section)
-        
-        return content
-    
-    def _clean_text(self, text: str) -> str:
-        """
-        Limpa texto (remove referências, etc)
-        
-        Args:
-            text: Texto bruto
-            
-        Returns:
-            Texto limpo
-        """
-        # Remover referências [1], [2], etc
-        text = re.sub(r'\[\d+\]', '', text)
-        
-        # Remover espaços múltiplos
-        text = re.sub(r'\s+', ' ', text)
-        
-        # Remover "Editar" (botões de edição)
-        text = text.replace('[editar]', '')
-        text = text.replace('[Editar]', '')
-        
-        return text.strip()
     
     def _save_content(self, content: Dict, output_file: Path):
         """
-        Salva conteúdo em arquivo de texto estruturado
+        Salva conteúdo em arquivo
         
         Args:
             content: Dict com conteúdo
             output_file: Arquivo de saída
         """
         with open(output_file, 'w', encoding='utf-8') as f:
-            # Título
+            # Cabeçalho
             f.write(f"# {content['title']}\n\n")
+            f.write(f"**Fonte**: {content['url']}\n\n")
+            f.write("---\n\n")
             
             # Resumo
             f.write("## Resumo\n\n")
             f.write(content['summary'] + "\n\n")
+            f.write("---\n\n")
             
             # Seções
+            f.write("## Conteúdo Completo\n\n")
             for section in content['sections']:
-                # Ignorar seções não relevantes
-                if any(skip in section['title'].lower() for skip in 
-                       ['referências', 'bibliografia', 'ligações externas', 
-                        'ver também', 'notas']):
-                    continue
-                
-                f.write(f"## {section['title']}\n\n")
-                for para in section['content']:
+                f.write(f"### {section['title']}\n\n")
+                for para in section['paragraphs']:
                     f.write(para + "\n\n")
     
     def download_multiple_figures(
@@ -190,7 +207,11 @@ class WikipediaDownloader:
         """
         results = {}
         
-        for figure in figures:
+        for i, figure in enumerate(figures, 1):
+            print(f"\n{'='*60}")
+            print(f"[{i}/{len(figures)}] {figure}")
+            print('='*60)
+            
             # Determinar diretório de saída
             if periods and figure in periods:
                 period = periods[figure]
@@ -203,39 +224,34 @@ class WikipediaDownloader:
             # Baixar
             success = self.download_figure_bio(figure, output_dir)
             results[figure] = success
+            
+            # Rate limiting: aguardar entre requisições
+            if i < len(figures):
+                print("   ⏳ Aguardando 1s...")
+                time.sleep(1)
         
         return results
 
 
-# ===== CONFIGURAÇÕES PADRÃO =====
+# ===== CONFIGURAÇÕES =====
 
 FIGURES_BY_PERIOD = {
     'renaissance': [
-        'Galileo_Galilei',
-        'Leonardo_da_Vinci',
+        'Galileo Galilei',
+        'Leonardo da Vinci',
         'Michelangelo',
     ],
     'enlightenment': [
-        'Isaac_Newton',
+        'Isaac Newton',
         'Voltaire',
-        'Benjamin_Franklin',
+        'Benjamin Franklin',
     ],
     'modern_era': [
-        'Albert_Einstein',
-        'Marie_Curie',
-        'Charles_Darwin',
-        'Nikola_Tesla',
+        'Albert Einstein',
+        'Marie Curie',
+        'Charles Darwin',
+        'Nikola Tesla',
     ],
-}
-
-# Mapeamento para português (se usar Wikipedia PT)
-FIGURES_PT = {
-    'Galileo_Galilei': 'Galileu_Galilei',
-    'Isaac_Newton': 'Isaac_Newton',
-    'Albert_Einstein': 'Albert_Einstein',
-    'Leonardo_da_Vinci': 'Leonardo_da_Vinci',
-    'Marie_Curie': 'Marie_Curie',
-    'Charles_Darwin': 'Charles_Darwin',
 }
 
 
@@ -243,17 +259,19 @@ def main():
     """
     Função principal
     """
-    parser = argparse.ArgumentParser(description='Download Wikipedia biographies')
+    parser = argparse.ArgumentParser(
+        description='Download Wikipedia biographies using API'
+    )
     parser.add_argument(
         '--figures',
         type=str,
-        help='Comma-separated list of figures (ex: "Galileo_Galilei,Isaac_Newton")'
+        help='Comma-separated list (ex: "Galileo Galilei,Isaac Newton")'
     )
     parser.add_argument(
         '--period',
         type=str,
         choices=['renaissance', 'enlightenment', 'modern_era', 'all'],
-        default='all',
+        default=None,
         help='Download all figures from a period'
     )
     parser.add_argument(
@@ -265,43 +283,44 @@ def main():
     parser.add_argument(
         '--language',
         type=str,
-        default='pt',
-        choices=['pt', 'en'],
+        default='en',
+        choices=['pt', 'en', 'es', 'fr', 'de'],
         help='Wikipedia language'
     )
     
     args = parser.parse_args()
     
     print("\n" + "="*60)
-    print("📚 WIKIPEDIA BIOGRAPHY DOWNLOADER")
+    print("📚 WIKIPEDIA API BIOGRAPHY DOWNLOADER")
     print("="*60 + "\n")
     
-    # Determinar figuras a baixar
+    # Determinar figuras
     if args.figures:
         figures = [f.strip() for f in args.figures.split(',')]
         periods_map = {}
-    elif args.period == 'all':
-        figures = []
-        periods_map = {}
-        for period, period_figures in FIGURES_BY_PERIOD.items():
-            for figure in period_figures:
-                figures.append(figure)
-                periods_map[figure] = period
+    elif args.period:
+        if args.period == 'all':
+            figures = []
+            periods_map = {}
+            for period, period_figures in FIGURES_BY_PERIOD.items():
+                for figure in period_figures:
+                    figures.append(figure)
+                    periods_map[figure] = period
+        else:
+            figures = FIGURES_BY_PERIOD[args.period]
+            periods_map = {fig: args.period for fig in figures}
     else:
-        figures = FIGURES_BY_PERIOD[args.period]
-        periods_map = {fig: args.period for fig in figures}
+        print("❌ Erro: Especifique --figures ou --period")
+        return
     
-    # Ajustar para português se necessário
-    if args.language == 'pt':
-        figures = [FIGURES_PT.get(fig, fig) for fig in figures]
-    
-    print(f"Figuras a baixar ({len(figures)}):")
+    print(f"📋 Figuras a baixar ({len(figures)}):")
     for fig in figures:
-        period = periods_map.get(fig, 'unknown')
-        print(f"   - {fig} ({period})")
+        period = periods_map.get(fig, 'geral')
+        print(f"   • {fig} ({period})")
+    print()
     
     # Inicializar downloader
-    downloader = WikipediaDownloader(language=args.language)
+    downloader = WikipediaAPIDownloader(language=args.language)
     
     # Baixar
     output_dir = Path(args.output_dir)
@@ -309,20 +328,23 @@ def main():
     
     # Resumo
     print("\n" + "="*60)
-    print("📊 RESUMO DOS DOWNLOADS")
+    print("📊 RESUMO")
     print("="*60 + "\n")
     
     successes = sum(1 for success in results.values() if success)
     failures = len(results) - successes
     
-    print(f"✅ Sucessos: {successes}")
-    print(f"❌ Falhas: {failures}")
+    print(f"✅ Sucessos: {successes}/{len(results)}")
+    print(f"❌ Falhas: {failures}/{len(results)}")
     
     if failures > 0:
-        print("\nFalhas:")
+        print("\n⚠️  Falhas:")
         for figure, success in results.items():
             if not success:
-                print(f"   - {figure}")
+                print(f"   • {figure}")
+    
+    if successes > 0:
+        print(f"\n📁 Arquivos salvos em: {output_dir}")
     
     print("\n✨ Concluído!\n")
 
@@ -331,7 +353,7 @@ if __name__ == "__main__":
     try:
         main()
     except KeyboardInterrupt:
-        print("\n\n⚠️  Download interrompido pelo usuário")
+        print("\n\n⚠️  Interrompido pelo usuário")
         sys.exit(0)
     except Exception as e:
         print(f"\n❌ Erro: {str(e)}")

@@ -59,15 +59,12 @@ DEVICE = get_device()
 # ===== HUGGING FACE =====
 HF_TOKEN = os.getenv("HF_TOKEN")
 if not HF_TOKEN or HF_TOKEN == "your_huggingface_token_here":
-    raise ValueError(
-        "❌ HF_TOKEN não encontrado ou inválido!\n"
-        "Configure seu token em .env:\n"
-        "1. Copie .env.example para .env\n"
-        "2. Obtenha seu token em: https://huggingface.co/settings/tokens\n"
-        "3. Cole no arquivo .env"
+    import warnings
+    warnings.warn(
+        "⚠️  HF_TOKEN não configurado — funcionalidades de LLM indisponíveis. "
+        "Configure em .env para usar o modelo completo."
     )
-
-
+    HF_TOKEN = None
 # ===== MODEL CONFIGURATION =====
 MODEL_NAME = os.getenv("MODEL_NAME", "meta-llama/Llama-3.1-8B-Instruct")
 EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "sentence-transformers/all-MiniLM-L6-v2")

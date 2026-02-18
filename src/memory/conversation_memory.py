@@ -46,36 +46,25 @@ class GalileuConversationMemory:
         self.interaction_count = 0
     
     def add_user_message(self, message: str) -> None:
-        """
-        Adiciona mensagem do usuário à memória
-        
-        Args:
-            message: Texto da mensagem do usuário
-        """
         self.chat_history.add_user_message(message)
         self.interaction_count += 1
-        
-        # Se for window, manter apenas últimas k*2 mensagens (user + ai)
+        self._enforce_window()  # ← aqui
+        if DEBUG:
+            print(f"\n💬 Usuário ({self.interaction_count}): {message[:50]}...")
+
+    def add_ai_message(self, message: str) -> None:
+        self.chat_history.add_ai_message(message)
+        self._enforce_window()  # ← e aqui também
+        if DEBUG:
+            print(f"🤖 IA: {message[:50]}...")
+
+    def _enforce_window(self):
+        """Garante que a janela não ultrapasse k*2 mensagens."""
         if self.memory_type == "window":
             messages = self.chat_history.messages
             if len(messages) > self.k * 2:
                 self.chat_history.messages = messages[-(self.k * 2):]
-        
-        if DEBUG:
-            print(f"\n💬 Usuário ({self.interaction_count}): {message[:50]}...")
-    
-    def add_ai_message(self, message: str) -> None:
-        """
-        Adiciona mensagem da IA à memória
-        
-        Args:
-            message: Texto da resposta da IA
-        """
-        self.chat_history.add_ai_message(message)
-        
-        if DEBUG:
-            print(f"🤖 IA: {message[:50]}...")
-    
+                
     def get_memory_variables(self) -> Dict[str, Any]:
         """
         Retorna as variáveis de memória para uso em chains

@@ -1,70 +1,160 @@
 """
-Main - Interface Gradio para o Chatbot Galileu Galilei
-Interface web interativa para conversar sobre o pai da ciência moderna
+Main - Interface Gradio v2.0
+Sistema RAG Multi-Figura: Galileu, Newton, Einstein
 """
 
 import sys
 import os
 from pathlib import Path
 
-# Adiciona o diretório raiz ao path
 sys.path.append(str(Path(__file__).resolve().parent))
 
 import gradio as gr
 from typing import List, Tuple
 
-from src.chains.rag_chain import GalileuRAGChain
-from config.settings import DEBUG
-
+from src.chains.rag_chain_multi import MultiFigureRAGChain
+from config.settings import DEBUG, MODEL_NAME, DEVICE
 
 # ===== CONFIGURAÇÃO GLOBAL =====
-# Inicializar o RAG Chain (será feito na primeira execução)
 rag_chain = None
 
+# Diretório do vectorstore multi-collection
+VECTORSTORE_BASE = Path("data/vectorstore")
+EXPECTED_COLLECTIONS = [
+    "renaissance/galileo_galilei",
+    "enlightenment/isaac_newton",
+    "modern_era/albert_einstein",
+]
 
-def initialize_rag_chain():
+# Figuras e descrições para exibir na UI
+FIGURES_INFO = {
+    "galileo_galilei": {
+        "label": "🔭 Galileu Galilei",
+        "period": "Renascimento",
+        "years": "1564–1642",
+        "description": "Pai da ciência moderna, astrônomo e físico italiano.",
+    },
+    "isaac_newton": {
+        "label": "🍎 Isaac Newton",
+        "period": "Iluminismo",
+        "years": "1643–1727",
+        "description": "Formulou as leis do movimento e da gravitação universal.",
+    },
+    "albert_einstein": {
+        "label": "⚛️ Albert Einstein",
+        "period": "Era Moderna",
+        "years": "1879–1955",
+        "description": "Autor da teoria da relatividade e pioneiro da física quântica.",
+    },
+}
+
+# Exemplos de perguntas organizados por tipo
+EXAMPLE_QUESTIONS = [
+    # Figura única
+    "Quando e onde Galileu Galilei nasceu?",
+    "Quais foram as principais descobertas de Newton?",
+    "O que Einstein contribuiu para a física quântica?",
+    # Comparativas
+    "Compare as contribuições de Newton e Einstein para a física.",
+    "Qual a diferença entre a visão de gravidade de Newton e Einstein?",
+    "Como a física evoluiu do Renascimento até a Era Moderna?",
+    # Contextuais
+    "O que aconteceu entre Galileu e a Igreja Católica?",
+    "Como Newton desenvolveu o cálculo?",
+    "Por que Einstein ganhou o Nobel de Física?",
+]
+
+
+# ===== INICIALIZAÇÃO =====
+
+def check_vectorstore() -> Tuple[bool, str]:
     """
-    Inicializa o RAG Chain (lazy loading)
+    Verifica se o vectorstore multi-collection está disponível.
+
+    Returns:
+        (ok: bool, mensagem: str)
+    """
+    if not VECTORSTORE_BASE.exists():
+        return False, (
+            f"Diretório `{VECTORSTORE_BASE}` não encontrado.\n\n"
+            "Execute:\n"
+            "```\n"
+            "python src/ingestion/pipeline.py\n"
+            "python src/vectorstore.py --mode multi\n"
+            "```"
+        )
+
+    found = []
+    missing = []
+    for col in EXPECTED_COLLECTIONS:
+        col_path = VECTORSTORE_BASE / col
+        if col_path.exists() and any(col_path.iterdir()):
+            found.append(col)
+        else:
+            missing.append(col)
+
+    if not found:
+        return False, (
+            "Nenhuma collection encontrada em `data/vectorstore/`.\n\n"
+            "Execute:\n"
+            "```\n"
+            "python src/ingestion/pipeline.py\n"
+            "python src/vectorstore.py --mode multi\n"
+            "```"
+        )
+
+    if missing:
+        msg = f"Collections disponíveis: {len(found)}/{len(EXPECTED_COLLECTIONS)}\n"
+        msg += f"Faltando: {', '.join(missing)}"
+        # Parcialmente OK — o sistema consegue rodar com menos figuras
+        return True, msg
+
+    return True, f"Todas as {len(found)} collections prontas."
+
+
+def initialize_rag_chain() -> Tuple[bool, str]:
+    """
+    Inicializa o MultiFigureRAGChain (lazy loading).
+
+    Returns:
+        (sucesso: bool, mensagem: str)
     """
     global rag_chain
-    
-    if rag_chain is None:
-        print("\n🚀 Inicializando sistema RAG pela primeira vez...")
-        try:
-            rag_chain = GalileuRAGChain()
-            print("✅ Sistema pronto!")
-            return True
-        except Exception as e:
-            print(f"❌ Erro ao inicializar: {str(e)}")
-            return False
-    return True
+
+    if rag_chain is not None:
+        return True, "Sistema já inicializado."
+
+    print("\n🚀 Inicializando Multi-Figure RAG Chain...")
+    try:
+        rag_chain = MultiFigureRAGChain()
+        print("✅ Sistema pronto!")
+        return True, "Sistema inicializado com sucesso!"
+    except Exception as e:
+        msg = f"Erro ao inicializar: {str(e)}"
+        print(f"❌ {msg}")
+        if DEBUG:
+            import traceback
+            traceback.print_exc()
+        return False, msg
 
 
 # ===== FUNÇÕES DO CHAT =====
 
 def chat_response(message: str, history: List[Tuple[str, str]]) -> str:
     """
-    Processa mensagem do usuário e retorna resposta
-    
-    Args:
-        message: Mensagem do usuário
-        history: Histórico do chat (não usado, mantido pela memória interna)
-        
-    Returns:
-        Resposta do assistente
+    Processa mensagem e retorna resposta do sistema multi-figura.
     """
-    if not message or message.strip() == "":
-        return "Por favor, faça uma pergunta sobre Galileu Galilei!"
-    
-    # Inicializar RAG Chain se necessário
-    if not initialize_rag_chain():
-        return "❌ Erro: Sistema não está inicializado. Verifique se o vector store foi criado."
-    
+    if not message or not message.strip():
+        return "Por favor, faça uma pergunta sobre Galileu, Newton ou Einstein!"
+
+    # Inicializar chain se necessário
+    ok, msg = initialize_rag_chain()
+    if not ok:
+        return f"❌ Sistema não inicializado.\n\n{msg}"
+
     try:
-        # Processar query
         response = rag_chain.chat(message)
         return response
-        
     except Exception as e:
         error_msg = f"❌ Erro ao processar sua pergunta: {str(e)}"
         print(error_msg)
@@ -74,10 +164,8 @@ def chat_response(message: str, history: List[Tuple[str, str]]) -> str:
         return error_msg
 
 
-def clear_conversation():
-    """
-    Limpa o histórico de conversação
-    """
+def clear_conversation() -> str:
+    """Limpa o histórico de conversação."""
     if rag_chain is not None:
         rag_chain.clear_conversation()
         return "🗑️ Conversa reiniciada! Como posso ajudá-lo?"
@@ -85,191 +173,229 @@ def clear_conversation():
 
 
 def get_system_stats() -> str:
-    """
-    Retorna estatísticas do sistema
-    
-    Returns:
-        String formatada com estatísticas
-    """
+    """Retorna estatísticas detalhadas do sistema v2.0."""
     if rag_chain is None:
-        return "Sistema ainda não foi inicializado."
-    
+        return "⚠️ Sistema ainda não foi inicializado. Envie uma mensagem primeiro."
+
     try:
         stats = rag_chain.get_stats()
         memory_stats = stats.get("memory", {})
-        
-        stats_text = f"""
-📊 **Estatísticas do Sistema**
+        vs_stats = stats.get("vectorstore", {})
+        router_stats = stats.get("router", {})
 
-**Modelo:** {stats.get('model', 'N/A')}
-**Device:** {stats.get('device', 'N/A')}
-**Top K Documents:** {stats.get('top_k_documents', 'N/A')}
+        # Montar texto de stats
+        lines = [
+            "## 📊 Estatísticas do Sistema v2.0",
+            "",
+            f"**Modelo LLM:** `{stats.get('model', 'N/A')}`",
+            f"**Device:** `{stats.get('device', 'N/A')}`",
+            "",
+            "### 🗄️ Vector Store",
+            f"- Collections totais: **{vs_stats.get('total_collections', 'N/A')}**",
+            f"- Collections carregadas: **{vs_stats.get('collections_loaded', 'N/A')}**",
+            f"- Embedding model: `{vs_stats.get('embedding_model', 'N/A')}`",
+        ]
 
-**Memória:**
-- Total de mensagens: {memory_stats.get('total_messages', 0)}
-- Interações: {memory_stats.get('interactions', 0)}
-- Tipo: {memory_stats.get('memory_type', 'N/A')}
-"""
-        
-        if memory_stats.get('memory_type') == 'window':
-            stats_text += f"- Tamanho da janela: {memory_stats.get('window_size', 'N/A')}\n"
-        
-        return stats_text
-        
+        collections = vs_stats.get("collections_list", [])
+        if collections:
+            lines.append("")
+            lines.append("**Collections disponíveis:**")
+            for col in sorted(collections):
+                lines.append(f"  - `{col}`")
+
+        lines += [
+            "",
+            "### 🧭 Topic Router",
+            f"- Queries roteadas: **{router_stats.get('total_queries', 0)}**",
+            f"- Cache hits: **{router_stats.get('cache_hits', 0)}**",
+            "",
+            "### 🧠 Memória Conversacional",
+            f"- Total de mensagens: **{memory_stats.get('total_messages', 0)}**",
+            f"- Interações: **{memory_stats.get('interactions', 0)}**",
+            f"- Tipo: `{memory_stats.get('memory_type', 'N/A')}`",
+        ]
+
+        if memory_stats.get("memory_type") == "window":
+            lines.append(f"- Tamanho da janela: **{memory_stats.get('window_size', 'N/A')}**")
+
+        return "\n".join(lines)
+
     except Exception as e:
         return f"Erro ao obter estatísticas: {str(e)}"
 
 
-# ===== EXEMPLOS DE PERGUNTAS =====
+def get_routing_info(message: str) -> str:
+    """
+    Retorna informação de roteamento para uma query (modo debug).
+    Útil para entender como o Topic Router classificou a pergunta.
+    """
+    if not message or not message.strip():
+        return ""
+    if rag_chain is None:
+        return ""
+    try:
+        routing = rag_chain.topic_router.route_query(message)
+        expert = routing.get("primary_expert", "N/A")
+        confidence = routing.get("confidence", 0)
+        reason = routing.get("routing_reason", "")
+        secondary = routing.get("secondary_experts", [])
 
-EXAMPLE_QUESTIONS = [
-    "Quando e onde Galileu Galilei nasceu?",
-    "Quais foram as principais descobertas de Galileu com o telescópio?",
-    "O que aconteceu entre Galileu e a Igreja Católica?",
-    "Quais invenções Galileu criou?",
-    "Como Galileu contribuiu para a física?",
-    "Quando e como Galileu morreu?",
-    "Qual foi o papel de Galileu na revolução científica?",
-    "O que é o método científico de Galileu?",
-]
+        lines = [f"🧭 **Expert:** `{expert}` (confiança: {confidence:.0%})"]
+        if secondary:
+            lines.append(f"🔀 **Secundários:** {', '.join(secondary)}")
+        if reason:
+            lines.append(f"💡 **Razão:** {reason}")
+        return "\n".join(lines)
+    except Exception:
+        return ""
 
 
 # ===== INTERFACE GRADIO =====
 
-def create_interface():
-    """
-    Cria a interface Gradio
-    
-    Returns:
-        Interface Gradio configurada
-    """
-    
-    # CSS customizado para melhorar a aparência
+def create_interface() -> gr.Blocks:
+    """Cria a interface Gradio v2.0."""
+
     custom_css = """
-    .container {
-        max-width: 900px;
-        margin: auto;
-    }
+    .container { max-width: 960px; margin: auto; }
     .header {
         text-align: center;
         padding: 20px;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
         color: white;
-        border-radius: 10px;
+        border-radius: 12px;
         margin-bottom: 20px;
     }
-    .examples {
-        margin-top: 20px;
+    .figure-card {
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        padding: 12px;
+        background: #fafafa;
     }
     .footer {
         text-align: center;
         margin-top: 30px;
-        padding: 20px;
-        color: #666;
-        font-size: 0.9em;
+        padding: 16px;
+        color: #888;
+        font-size: 0.85em;
     }
     """
-    
-    # Criar interface
-    with gr.Blocks(title="Galileu Galilei Chatbot") as demo:
-        
-        # Header
+
+    with gr.Blocks(title="Cientistas Históricos — RAG Multi-Figura", css=custom_css) as demo:
+
+        # ── Header ──
         gr.Markdown("""
         <div class="header">
-            <h1>🔭 Galileu Galilei Chatbot</h1>
-            <p>Converse com um assistente especializado no pai da ciência moderna</p>
+            <h1>🏛️ Cientistas Históricos</h1>
+            <p>Sistema RAG Multi-Figura · Galileu · Newton · Einstein</p>
         </div>
         """)
-        
-        # Informações sobre o sistema
-        with gr.Accordion("ℹ️ Sobre este chatbot", open=False):
-            gr.Markdown("""
-            Este chatbot utiliza **Retrieval-Augmented Generation (RAG)** para responder perguntas sobre Galileu Galilei.
-            
-            **Tecnologias utilizadas:**
-            - 🤖 **LLM:** Meta Llama-3.1-8B-Instruct
-            - 🗄️ **Vector Store:** ChromaDB
-            - 🔗 **Framework:** LangChain
-            - 🧠 **Memória:** Conversacional com histórico
-            - 📄 **Fonte:** Documento detalhado sobre a vida e obra de Galileu
-            
-            **Como usar:**
-            1. Digite sua pergunta sobre Galileu Galilei
-            2. O sistema busca informações relevantes no documento
-            3. O LLM gera uma resposta contextualizada
-            4. Você pode fazer perguntas de acompanhamento - o chatbot mantém o contexto!
+
+        # ── Cards das figuras ──
+        with gr.Row():
+            for fig_key, info in FIGURES_INFO.items():
+                with gr.Column():
+                    gr.Markdown(f"""
+**{info['label']}**
+*{info['period']} · {info['years']}*
+
+{info['description']}
+                    """)
+
+        gr.Markdown("---")
+
+        # ── Sobre o sistema ──
+        with gr.Accordion("ℹ️ Sobre este sistema", open=False):
+            gr.Markdown(f"""
+**Versão:** 2.0 · Multi-Figura
+
+**Como funciona:**
+1. Sua pergunta é analisada pelo **Topic Router**, que identifica quais figuras e experts são relevantes.
+2. O **Hybrid Retriever** busca os trechos mais relevantes nas collections ChromaDB (busca semântica + BM25).
+3. O **LLM** (`{MODEL_NAME}`) gera uma resposta contextualizada com base nos documentos recuperados.
+4. A **memória conversacional** mantém o contexto ao longo da conversa.
+
+**Você pode:**
+- Perguntar sobre uma figura específica: *"Quem foi Newton?"*
+- Fazer perguntas comparativas: *"Compare Newton e Einstein"*
+- Explorar períodos: *"Como a física evoluiu do Renascimento à Era Moderna?"*
+- Fazer perguntas de acompanhamento — o sistema mantém o contexto!
             """)
-        
-        # Interface de chat principal
+
+        # ── Chat principal ──
         chatbot = gr.ChatInterface(
             fn=chat_response,
             examples=EXAMPLE_QUESTIONS,
-            title="🔭 Galileu Galilei Chatbot",
-            description="Pergunte sobre a vida, descobertas e legado de Galileu Galilei",
+            title="",
+            description="💬 Pergunte sobre Galileu Galilei, Isaac Newton ou Albert Einstein",
+            retry_btn="🔄 Tentar novamente",
+            undo_btn="↩️ Desfazer",
+            clear_btn="🗑️ Limpar conversa",
         )
-        
-        # Seção de estatísticas
-        with gr.Accordion("📊 Estatísticas do Sistema", open=False):
-            stats_display = gr.Markdown("Clique em 'Atualizar Estatísticas' para ver informações do sistema.")
-            stats_btn = gr.Button("🔄 Atualizar Estatísticas")
-            stats_btn.click(fn=get_system_stats, inputs=None, outputs=stats_display)
-        
-        # Footer com informações
+
+        gr.Markdown("---")
+
+        # ── Painel inferior: Stats + Debug ──
+        with gr.Row():
+            with gr.Column(scale=1):
+                with gr.Accordion("📊 Estatísticas do Sistema", open=False):
+                    stats_display = gr.Markdown("*Clique em 'Atualizar' para ver as estatísticas.*")
+                    stats_btn = gr.Button("🔄 Atualizar Estatísticas", size="sm")
+                    stats_btn.click(fn=get_system_stats, inputs=None, outputs=stats_display)
+
+            with gr.Column(scale=1):
+                with gr.Accordion("🧭 Debug: Topic Router", open=False):
+                    gr.Markdown("*Veja como o sistema classificou sua última pergunta.*")
+                    debug_input = gr.Textbox(
+                        placeholder="Cole aqui sua pergunta para ver o roteamento...",
+                        label="Pergunta",
+                        lines=2,
+                    )
+                    debug_output = gr.Markdown()
+                    debug_btn = gr.Button("🔍 Analisar Roteamento", size="sm")
+                    debug_btn.click(fn=get_routing_info, inputs=debug_input, outputs=debug_output)
+
+        # ── Footer ──
         gr.Markdown("""
         <div class="footer">
-            <p><strong>Desenvolvido por:</strong> Matheus Masago</p>
-            <p>📚 Projeto educacional de RAG System com LangChain</p>
-            <p>💡 <em>Dica:</em> Faça perguntas específicas sobre a vida, descobertas e legado de Galileu!</p>
+            <p><strong>Desenvolvido por Matheus Masago</strong> · RAG System v2.0 com LangChain</p>
+            <p>ChromaDB · all-MiniLM-L6-v2 · BM25 · Reciprocal Rank Fusion</p>
         </div>
         """)
-    
+
     return demo
 
 
 # ===== FUNÇÃO PRINCIPAL =====
 
 def main():
-    """
-    Função principal - inicializa e lança a interface
-    """
-    print("\n" + "="*60)
-    print("🚀 INICIANDO CHATBOT GALILEU GALILEI")
-    print("="*60 + "\n")
-    
-    # Verificar se o vector store existe
-    vectorstore_path = Path("data/vectorstore")
-    if not vectorstore_path.exists() or not any(vectorstore_path.iterdir()):
-        print("⚠️  ATENÇÃO: Vector store não encontrado!")
-        print("\n📋 Execute os seguintes comandos primeiro:")
-        print("   1. python src/document_loader.py")
-        print("   2. python src/vectorstore.py")
-        print("\nDepois execute este script novamente.")
+    print("\n" + "=" * 60)
+    print("🚀 INICIANDO SISTEMA RAG MULTI-FIGURA v2.0")
+    print("=" * 60 + "\n")
+
+    # Verificar vectorstore antes de subir a interface
+    vs_ok, vs_msg = check_vectorstore()
+    if not vs_ok:
+        print(f"❌ ERRO: Vectorstore não encontrado ou vazio.\n")
+        print(vs_msg)
+        print("\n💡 Execute os comandos acima e tente novamente.")
         return
-    
-    # Criar interface
+
+    print(f"✅ Vectorstore: {vs_msg}")
+    print(f"🤖 Modelo: {MODEL_NAME}")
+    print(f"⚙️  Device: {DEVICE}")
+    print("\n📌 A chain será inicializada na primeira mensagem (lazy loading).")
+    print("\n🌐 Iniciando interface web...")
+    print("💡 Use Ctrl+C para encerrar\n")
+
     demo = create_interface()
-    
-    # Informações de lançamento
-    print("\n📍 Informações:")
-    print("   - Interface: Gradio")
-    print("   - Modelo: Llama-3.1-8B-Instruct")
-    print("   - Vector Store: ChromaDB")
-    print("   - Memória: Conversacional")
-    
-    print("\n🌐 Abrindo interface web...")
-    print("   Acesse pelo navegador quando estiver pronto!")
-    print("\n💡 Dica: Use Ctrl+C para encerrar\n")
-    
-    # Lançar interface
-    # share=True cria um link público temporário (útil para demonstrações)
-    # share=False mantém apenas local
+
     demo.launch(
-        server_name="0.0.0.0",  # Permite acesso de outros dispositivos na rede
+        server_name="0.0.0.0",
         server_port=7860,
-        share=False,  # Mude para True se quiser link público
+        share=False,
         show_error=True,
         quiet=False,
-        inbrowser=True
+        inbrowser=True,
     )
 
 
@@ -277,8 +403,7 @@ if __name__ == "__main__":
     try:
         main()
     except KeyboardInterrupt:
-        print("\n\n👋 Encerrando aplicação...")
-        print("Até logo!")
+        print("\n\n👋 Encerrando aplicação... Até logo!")
     except Exception as e:
         print(f"\n❌ Erro fatal: {str(e)}")
         if DEBUG:

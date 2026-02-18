@@ -1,74 +1,110 @@
+# ══════════════════════════════════════════════════════
 # Core LangChain
+# ══════════════════════════════════════════════════════
 langchain>=0.3.0
 langchain-community>=0.3.0
 langchain-core>=0.3.0
 langchain-text-splitters>=0.3.0
 langchain-huggingface>=0.1.0
 
+# ══════════════════════════════════════════════════════
 # Hugging Face
+# ══════════════════════════════════════════════════════
 transformers>=4.40.0
 sentence-transformers>=3.0.0
 huggingface-hub>=0.20.0
 accelerate>=0.30.0
-bitsandbytes>=0.41.0  # Para quantização 4-bit (QLoRA)
+bitsandbytes>=0.41.0  # Quantização 4-bit (QLoRA) — requer GPU NVIDIA
 
-# Vector Store - ChromaDB
+# ══════════════════════════════════════════════════════
+# Vector Store
+# ══════════════════════════════════════════════════════
 chromadb>=0.5.0
 
+# ══════════════════════════════════════════════════════
 # Document Processing
+# ══════════════════════════════════════════════════════
 pypdf>=5.0.0
 pdfplumber>=0.11.0
+# unstructured — removido (incompatível com Python 3.13)
 
+# ══════════════════════════════════════════════════════
 # Text Processing
+# ══════════════════════════════════════════════════════
 tiktoken>=0.7.0
-# unstructured - removido temporariamente (problemas com Python 3.13)
 
+# ══════════════════════════════════════════════════════
 # Environment & Config
+# ══════════════════════════════════════════════════════
 python-dotenv>=1.0.0
 pydantic>=2.0.0
 pydantic-settings>=2.0.0
 
+# ══════════════════════════════════════════════════════
 # Utilities
-numpy>=1.24.0  # NumPy 1.x é mais estável, mas 2.x também funciona
+# ══════════════════════════════════════════════════════
+numpy>=1.24.0
 pandas>=2.0.0
-
-# Optional Tools (Wikipedia, calculadora, etc)
-wikipedia>=1.4.0
+tqdm>=4.65.0
+requests>=2.31.0
 numexpr>=2.10.0
 
-# Testing
-pytest>=8.0.0
-pytest-asyncio>=0.23.0
+# ══════════════════════════════════════════════════════
+# Retrieval — v2.0
+# ══════════════════════════════════════════════════════
+rank-bm25>=0.2.2          # BM25 para Hybrid Retriever
 
+# ══════════════════════════════════════════════════════
+# Wikipedia ingestion pipeline
+# ══════════════════════════════════════════════════════
+wikipedia>=1.4.0
+beautifulsoup4>=4.12.0
+
+# ══════════════════════════════════════════════════════
 # Interface
+# ══════════════════════════════════════════════════════
 gradio>=4.0.0
 
-# Notebooks
-jupyter>=1.0.0
-ipykernel>=6.25.0
-notebook>=7.0.0
+# ══════════════════════════════════════════════════════
+# Testing — v2.0
+# ══════════════════════════════════════════════════════
+pytest>=8.0.0
+pytest-asyncio>=0.23.0
+pytest-timeout>=2.3.0     # Timeout por teste (evita travar em testes de LLM)
 
-# Progress bars
-tqdm>=4.65.0
-
-# Torch (instala automaticamente a versão correta para o sistema)
+# ══════════════════════════════════════════════════════
+# PyTorch — instalar manualmente conforme seu hardware:
+#
+#   NVIDIA CUDA 11.8 (RTX 3050):
+#     pip install torch torchvision torchaudio \
+#       --index-url https://download.pytorch.org/whl/cu118
+#
+#   CPU only:
+#     pip install torch torchvision torchaudio
+# ══════════════════════════════════════════════════════
 torch>=2.0.0
 torchvision>=0.15.0
 torchaudio>=2.0.0
 
-# Monitoring (opcional)
-# langsmith - opcional, pode instalar depois se necessário
-# === Scaling Requirements (v2.0) ===
+# ══════════════════════════════════════════════════════
+# Notebooks (opcional)
+# ══════════════════════════════════════════════════════
+jupyter>=1.0.0
+ipykernel>=6.25.0
+notebook>=7.0.0
 
-# NER e Processamento de Linguagem
-spacy>=3.7.0
-
-# Sparse Retrieval
-rank-bm25>=0.2.2
-
-# Web Scraping (Wikipedia download)
-beautifulsoup4>=4.12.0
-requests>=2.31.0
-
-# Visualizações (opcional)
+# ══════════════════════════════════════════════════════
+# Visualizações (opcional, para análise de métricas futuras)
+# ══════════════════════════════════════════════════════
 plotly>=5.18.0
+
+# ══════════════════════════════════════════════════════
+# NLP avançado (opcional — para futura extração de entidades)
+# ══════════════════════════════════════════════════════
+# spacy>=3.7.0
+# Após instalar: python -m spacy download pt_core_news_lg
+
+# ══════════════════════════════════════════════════════
+# Monitoring (opcional)
+# ══════════════════════════════════════════════════════
+# langsmith

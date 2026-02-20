@@ -213,7 +213,7 @@ class MultiFigureRAGChain:
             print("\n📝 Gerando resposta...")
 
         try:
-            response = self.llm(prompt)
+            response = self.llm.invoke(prompt)
             # Extrair apenas a resposta gerada (após o marcador do prompt)
             answer = response.split("**Sua resposta:**")[-1].strip()
             return answer

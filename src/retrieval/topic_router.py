@@ -18,7 +18,14 @@ class TopicRouter:
     """
     Roteador que analisa queries e determina quais experts/collections usar
     """
-    
+    FIGURE_TO_PERIOD = {
+    'galileo_galilei': 'renaissance',
+    'isaac_newton': 'enlightenment',
+    'albert_einstein': 'modern_era',
+    'leonardo_da_vinci': 'renaissance',
+    'marie_curie': 'modern_era',
+    'charles_darwin': 'modern_era',
+}
     def __init__(self):
         """
         Inicializa o roteador
@@ -148,38 +155,22 @@ class TopicRouter:
         return f"Roteado para {expert} (confiança: {score:.2f})"
     
     def route_to_collections(self, query: str, available_periods: List[str]) -> List[str]:
-        """
-        Determina quais collections buscar baseado na query
-        
-        Args:
-            query: Query do usuário
-            available_periods: Períodos disponíveis no vectorstore
-            
-        Returns:
-            Lista de collections para buscar
-        """
         query_lower = query.lower()
-        
-        # Detectar figuras mencionadas
         mentioned_figures = self._detect_figures(query_lower)
-        
-        # Detectar períodos mencionados
         mentioned_periods = self._detect_periods(query_lower)
-        
-        # Se menciona figuras específicas, buscar nas collections delas
+
         if mentioned_figures:
-            collections = [
-                f"{period}/{figure}"
-                for period in available_periods
-                for figure in mentioned_figures
-            ]
-            return collections
-        
-        # Se menciona períodos, buscar em todas as figuras daquele período
+            collections = []
+            for figure in mentioned_figures:
+                period = self.FIGURE_TO_PERIOD.get(figure)
+                if period and f"{period}/{figure}" not in collections:
+                    collections.append(f"{period}/{figure}")
+            if collections:
+                return collections
+
         if mentioned_periods:
             return mentioned_periods
-        
-        # Caso contrário, buscar em todas as collections disponíveis
+
         return available_periods
     
     def _detect_figures(self, query: str) -> List[str]:

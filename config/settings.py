@@ -104,10 +104,11 @@ if USE_QUANTIZATION and DEVICE == "cuda":
             "quantization_config": bnb_config,
         }
 else:
-    print(f"⚙️  Usando modelo sem quantização (FP16/FP32)")
+    print(f"⚙️  Usando modelo sem quantização (FP16)")
     MODEL_KWARGS = {
         "device_map": "auto" if DEVICE == "cuda" else None,
-        "torch_dtype": torch.float16 if DEVICE == "cuda" else torch.float32,
+        "torch_dtype": torch.float16,  # FP16 em CPU e GPU (~6GB RAM)
+        "low_cpu_mem_usage": True,     # carrega shard a shard, não tudo de uma vez
     }
 
 # Parâmetros de geração

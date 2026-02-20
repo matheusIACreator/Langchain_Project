@@ -10,9 +10,9 @@ from typing import List, Optional, Dict, Tuple
 # Adiciona o diretório raiz ao path
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 
-from langchain_community.vectorstores import Chroma
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_core.documents import Document
+from langchain_chroma import Chroma
 
 from config.settings import (
     CHROMA_PERSIST_DIRECTORY,

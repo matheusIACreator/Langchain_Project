@@ -67,8 +67,7 @@ if not HF_TOKEN or HF_TOKEN == "your_huggingface_token_here":
     HF_TOKEN = None
 # ===== MODEL CONFIGURATION =====
 MODEL_NAME = os.getenv("MODEL_NAME", "meta-llama/Llama-3.1-8B-Instruct")
-EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "sentence-transformers/all-MiniLM-L6-v2")
-
+EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2")
 # Configuração de quantização
 USE_QUANTIZATION = os.getenv("USE_QUANTIZATION", "True").lower() == "true"
 QUANTIZATION_BITS = int(os.getenv("QUANTIZATION_BITS", "4"))  # 4 ou 8 bits
@@ -113,10 +112,11 @@ else:
 
 # Parâmetros de geração
 GENERATION_KWARGS = {
-    "max_new_tokens": 512,
-    "temperature": 0.7,
+    "max_new_tokens": 1024,
+    "temperature": 0.3,
     "top_p": 0.9,
     "do_sample": True,
+    "repetition_penalty": 1.2,
 }
 
 
@@ -142,26 +142,29 @@ MAX_MEMORY_MESSAGES = 10
 
 
 # ===== PROMPT TEMPLATES =====
-SYSTEM_PROMPT = """Você é um assistente especializado em Galileu Galilei, o pai da ciência moderna.
+RAG_PROMPT = """Você é um assistente especializado em cientistas históricos.
 
-Você tem acesso a um documento detalhado sobre a vida, descobertas e contribuições de Galileu.
+INSTRUÇÕES CRÍTICAS — SIGA RIGOROSAMENTE:
+1. Responda EXCLUSIVAMENTE com base no CONTEXTO fornecido abaixo
+2. NÃO use conhecimento externo ao contexto fornecido
+3. Responda de forma direta e objetiva em texto corrido
+4. NÃO adicione seções como "Fonte", "Revisões", "Resumo", "Conclusão"
+5. NÃO adicione frases como "Caso precise de ajuda adicional..."
+6. Se o contexto não contiver a resposta, diga apenas: "Não encontrei essa informação nos documentos disponíveis."
+7. Seja preciso e cite datas, nomes e eventos específicos presentes no contexto
+8. Responda em no máximo 3 parágrafos
+9. NÃO emita opiniões pessoais
+10. NÃO use markdown como **, ## ou ###
 
-Diretrizes:
-- Responda APENAS com base nas informações fornecidas no contexto
-- Se a pergunta não puder ser respondida com o contexto disponível, diga claramente
-- Seja preciso e cite datas, nomes e eventos específicos quando relevante
-- Mantenha um tom educativo e acessível
-- Se perguntarem sobre algo além de Galileu, redirecione educadamente ao tópico
-
-Contexto:
+**Contexto relevante:**
 {context}
 
-Histórico da conversa:
+**Histórico da conversa:**
 {chat_history}
 
-Pergunta: {question}
+**Pergunta:** {question}
 
-Resposta:"""
+**Resposta:**"""
 
 
 # ===== DEBUG MODE =====

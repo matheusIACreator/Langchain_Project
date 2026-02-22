@@ -1,0 +1,35 @@
+# Ambiente virtual
+.venv/
+venv/
+env/
+
+# Cache Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Cache Hugging Face (modelo será baixado no primeiro run)
+.cache/
+
+# Vector store (será recriado ou montado como volume)
+#data/vectorstore/
+data/raw/*.pdf
+
+# Arquivos de desenvolvimento
+.git/
+.gitignore
+*.md
+.env
+.env.*
+
+# Frontend
+frontend/
+node_modules/
+
+# Logs
+*.log
+
+# VS Code
+.vscode/

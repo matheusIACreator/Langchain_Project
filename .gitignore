@@ -49,6 +49,7 @@ venv.bak/
 
 # Data - Vector Store (ChromaDB)
 data/vectorstore/
+data/raw/*.pdf
 *.db
 *.sqlite
 *.sqlite3
@@ -91,6 +92,7 @@ Thumbs.db
 # Documentation builds
 docs/_build/
 site/
+
 
 # MyPy
 .mypy_cache/

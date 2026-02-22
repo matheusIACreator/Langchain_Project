@@ -116,6 +116,7 @@ class GalileuRAGChain:
                 "text-generation",
                 model=model,
                 tokenizer=tokenizer,
+                return_full_text=False,
                 **GENERATION_KWARGS
             )
             

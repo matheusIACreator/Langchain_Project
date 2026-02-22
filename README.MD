@@ -1,27 +1,30 @@
-# 🔭 Historical Figures RAG System
+# 🔭 Science Chat — Historical Figures RAG System
 
 > **Sistema avançado de Retrieval-Augmented Generation (RAG) para explorar a história da ciência através de conversas inteligentes com múltiplas figuras históricas.**
 
-[![Python](https://img.shields.io/badge/Python-3.9+-blue.svg)](https://www.python.org/downloads/)
+[![Python](https://img.shields.io/badge/Python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![LangChain](https://img.shields.io/badge/LangChain-0.3.0-green.svg)](https://www.langchain.com/)
-[![License](https://img.shields.io/badge/license-Educational-orange.svg)]()
-[![Status](https://img.shields.io/badge/status-v2.0--dev-yellow.svg)]()
+[![License](https://img.shields.io/badge/license-MIT-orange.svg)]()
+[![Status](https://img.shields.io/badge/status-v2.1--deployed-brightgreen.svg)]()
+
+**🌐 Demo ao vivo:** [langchain-project-nine.vercel.app](https://langchain-project-nine.vercel.app)  
+**⚙️ API:** [shinigami4242557-science-chat-api.hf.space](https://shinigami4242557-science-chat-api.hf.space)
 
 ---
 
 ## 📖 Sobre o Projeto
 
-Este projeto começou como um chatbot focado em **Galileu Galilei** e evoluiu para um **sistema escalável** capaz de responder perguntas sobre múltiplas figuras históricas através de diferentes períodos da ciência.
+Este projeto começou como um chatbot focado em **Galileu Galilei** e evoluiu para um **sistema escalável** capaz de responder perguntas sobre múltiplas figuras históricas através de diferentes períodos da ciência — com frontend moderno, backend em produção e pipeline RAG híbrido completo.
 
 ### 🎯 O Que o Sistema Faz
 
-- 💬 **Conversas Naturais**: Faça perguntas sobre cientistas históricos em linguagem natural
-- 🧠 **Roteamento Inteligente**: Sistema detecta automaticamente qual figura/período é relevante
+- 💬 **Conversas Naturais**: Faça perguntas em português ou inglês
+- 🧠 **Roteamento Inteligente**: Detecta automaticamente qual figura/período é relevante
 - 🔍 **Busca Híbrida**: Combina busca semântica (conceitos) e keyword (nomes/datas)
-- 📚 **Multi-Período**: Suporta figuras do Renascimento, Iluminismo e Era Moderna
+- 📚 **Multi-Período**: Renascimento, Iluminismo e Era Moderna
 - 🤝 **Comparações**: Compare contribuições de diferentes cientistas
 - 💾 **Memória Conversacional**: Mantém contexto da conversa
-- ⚡ **Eficiente**: Roda em GPU de 4GB usando quantização 4-bit
+- ⚡ **Multilingual**: Embeddings que suportam PT/EN/50+ idiomas
 
 ---
 
@@ -32,91 +35,72 @@ Você: "Quando Galileu nasceu?"
 Bot: "Galileu Galilei nasceu em 15 de fevereiro de 1564, em Pisa, Itália..."
 
 Você: "E Newton?"
-Bot: "Isaac Newton nasceu em 25 de dezembro de 1642 (4 de janeiro de 1643 no calendário gregoriano), em Woolsthorpe, Inglaterra..."
+Bot: "Isaac Newton nasceu em 25 de dezembro de 1642, em Woolsthorpe, Inglaterra..."
 
 Você: "Compare as teorias de gravidade de Newton e Einstein"
-Bot: "Newton desenvolveu a lei da gravitação universal, descrevendo a gravidade como uma força de atração entre massas... Einstein, por outro lado, revolucionou esse conceito com a teoria da relatividade geral, propondo que a gravidade não é uma força, mas sim a curvatura do espaço-tempo causada pela presença de massa..."
+Bot: "Newton desenvolveu a lei da gravitação universal... Einstein revolucionou esse conceito com a teoria da relatividade geral, propondo que a gravidade é a curvatura do espaço-tempo..."
 ```
 
 ---
 
 ## 📊 Versões do Projeto
 
-### 📌 v1.0 - Single Figure (Branch: `main`)
-**Status**: ✅ Estável e Funcional
+### ✅ v2.1 — Deployed (Estado Atual)
+**Status**: ✅ Em produção
 
-- Chatbot focado exclusivamente em **Galileu Galilei**
+- Sistema multi-figura com 3 cientistas históricos
+- Embedding multilingual (`paraphrase-multilingual-MiniLM-L12-v2`)
+- LLM: Llama 3.2 3B Instruct
+- Frontend Next.js deployado na Vercel
+- Backend FastAPI deployado no HuggingFace Spaces
+- Hybrid retrieval (BM25 + dense + RRF)
+- 5 camadas de testes com MRR = 1.0
+
+### 📌 v1.0 — Single Figure (Histórico)
+**Status**: ✅ Estável
+
+- Chatbot focado exclusivamente em Galileu Galilei
 - Vector store com collection única
-- Interface Gradio básica
-- Memória conversacional
-
-### 🚧 v2.0 - Multi-Figure System (Branch: `feature/multi-figure-scaling`)
-**Status**: 🏗️ Em Desenvolvimento (80% completo)
-
-- Sistema escalável para **múltiplas figuras históricas**
-- Arquitetura multi-collection (ChromaDB)
-- Topic routing inteligente
-- Hybrid retrieval (dense + sparse)
-- Suporte a 3 períodos históricos
-
-**📈 Progresso v2.0:**
-```
-[████████████████████░░] 80%
-
-✅ Arquitetura documentada
-✅ Multi-collection vector store
-✅ Topic router
-✅ Hybrid retrieval
-✅ Pipeline de ingestão
-✅ 3 figuras implementadas
-🚧 Interface atualizada
-📅 Mixture of Experts
-📅 Métricas de avaliação
-```
+- Interface Gradio
 
 ---
 
-## 🏗️ Arquitetura do Sistema (v2.0)
+## 🏗️ Arquitetura do Sistema
 
 ```
 ┌─────────────────────────────────────────────┐
-│           User Query                         │
-│   "Compare Newton e Einstein"                │
+│     Frontend Next.js (Vercel)                │
+│     langchain-project-nine.vercel.app        │
 └──────────────────┬──────────────────────────┘
+                   │ HTTP
+         ┌─────────▼──────────┐
+         │  FastAPI Backend   │ ← HuggingFace Spaces
+         │  /chat /health     │
+         └─────────┬──────────┘
                    │
          ┌─────────▼──────────┐
-         │   Topic Router     │ ← Detecta figuras/período/expert
-         │  • Physics Expert  │
-         │  • Biography       │
-         │  • Astronomy       │
+         │   Topic Router     │ ← Detecta figura/período/expert
          └─────────┬──────────┘
                    │
     ┌──────────────┴─────────────────┐
     │                                │
 ┌───▼──────────┐         ┌──────────▼────┐
 │ Dense Search │         │ Sparse Search │
-│ (Semantic)   │         │    (BM25)     │
+│ (Embeddings) │         │    (BM25)     │
 └───┬──────────┘         └──────────┬────┘
     │                               │
     └───────────┬───────────────────┘
-                │ Hybrid Retrieval
+                │ Reciprocal Rank Fusion
     ┌───────────▼────────────────────┐
-    │  Multi-Collection VectorStore  │
-    │  ┌─────────────────────────┐   │
-    │  │ renaissance/            │   │
-    │  │   • galileo_galilei     │   │
-    │  ├─────────────────────────┤   │
-    │  │ enlightenment/          │   │
-    │  │   • isaac_newton        │   │
-    │  ├─────────────────────────┤   │
-    │  │ modern_era/             │   │
-    │  │   • albert_einstein     │   │
-    │  └─────────────────────────┘   │
+    │  Multi-Collection ChromaDB     │
+    │  renaissance/galileo_galilei   │
+    │  enlightenment/isaac_newton    │
+    │  modern_era/albert_einstein    │
     └───────────┬────────────────────┘
                 │
         ┌───────▼────────┐
-        │  LLM + Memory  │ ← Llama-3.1-8B (4-bit)
-        │  Generate      │
+        │ Llama 3.2 3B   │ ← CPU (HF Spaces)
+        │ + Memory k=5   │
         └───────┬────────┘
                 │
     ┌───────────▼───────────────┐
@@ -127,214 +111,153 @@ Bot: "Newton desenvolveu a lei da gravitação universal, descrevendo a gravidad
 ### 🔑 Componentes Principais
 
 #### 1. **Topic Router** (`src/retrieval/topic_router.py`)
-Analisa queries e determina:
-- Qual expert deve responder (Physics, Biography, Astronomy, etc)
-- Quais figuras estão sendo mencionadas
-- Quais períodos históricos são relevantes
+Analisa queries e determina qual expert deve responder (Physics, Biography, Astronomy, etc), quais figuras estão sendo mencionadas e quais períodos históricos são relevantes.
 
 #### 2. **Multi-Collection Vector Store** (`src/vectorstore.py`)
-- Gerencia múltiplas collections no ChromaDB
-- Estrutura: `period/figure` (ex: `renaissance/galileo_galilei`)
-- Lazy loading para eficiência de memória
-- Busca em uma ou múltiplas collections
+Gerencia múltiplas collections no ChromaDB com estrutura `period/figure`. Suporta lazy loading e busca em uma ou múltiplas collections simultaneamente.
 
 #### 3. **Hybrid Retriever** (`src/retrieval/hybrid_retriever.py`)
-- **Dense Search**: Busca semântica usando embeddings
-- **Sparse Search**: Busca por keywords usando BM25
-- **Reciprocal Rank Fusion**: Combina ambos os rankings
+Combina Dense Search (embeddings semânticos), Sparse Search (BM25) e Reciprocal Rank Fusion para ranking final.
 
 #### 4. **Ingestion Pipeline** (`src/ingestion/pipeline.py`)
-- Processa biografias automaticamente
-- Divide em chunks inteligentes
-- Adiciona metadata rica
-- Organiza por período histórico
+Processa biografias automaticamente, divide em chunks de 1000 chars (overlap 200), adiciona metadata rica e organiza por período histórico.
 
 #### 5. **Conversation Memory** (`src/memory/conversation_memory.py`)
-- Buffer window de últimas 5 interações
-- Mantém contexto da conversa
-- Permite perguntas de follow-up
+Window buffer das últimas 5 interações para manter contexto de follow-ups.
 
 ---
 
 ## 📚 Figuras Históricas Disponíveis
 
-### ✅ Renascimento (1400-1600)
-| Figura | Status | Chunks | Fonte |
-|--------|--------|--------|-------|
-| **Galileo Galilei** | ✅ Implementado | 96 | Wikipedia EN |
+| Figura | Período | Anos | Chunks | Fonte |
+|--------|---------|------|--------|-------|
+| 🔭 Galileu Galilei | Renascimento | 1564–1642 | 96 | Wikipedia EN |
+| 🍎 Isaac Newton | Iluminismo | 1643–1727 | 127 | Wikipedia EN |
+| ⚛️ Albert Einstein | Era Moderna | 1879–1955 | 126 | Wikipedia EN |
 
-### ✅ Iluminismo (1650-1800)
-| Figura | Status | Chunks | Fonte |
-|--------|--------|--------|-------|
-| **Isaac Newton** | ✅ Implementado | 127 | Wikipedia EN |
-
-### ✅ Era Moderna (1800-1950)
-| Figura | Status | Chunks | Fonte |
-|--------|--------|--------|-------|
-| **Albert Einstein** | ✅ Implementado | 126 | Wikipedia EN |
+**Total**: 3 figuras | 349 chunks | ~243KB de conhecimento histórico
 
 ### 📅 Planejadas para Futuras Versões
 
-**Renascimento:**
-- Leonardo da Vinci
-- Michelangelo
-- Nicolau Copérnico
-
-**Iluminismo:**
-- Voltaire
-- Benjamin Franklin
-- René Descartes
-
-**Era Moderna:**
-- Marie Curie
-- Charles Darwin
-- Nikola Tesla
-- Richard Feynman
-
-**Total Atual**: 3 figuras | 349 chunks | ~242KB de conhecimento histórico
+**Renascimento**: Leonardo da Vinci, Copérnico  
+**Iluminismo**: Benjamin Franklin, René Descartes  
+**Era Moderna**: Marie Curie, Charles Darwin, Nikola Tesla, Richard Feynman
 
 ---
 
 ## 🛠️ Tecnologias Utilizadas
 
-### Core Stack
-- **LLM**: Meta Llama-3.1-8B-Instruct (4-bit quantização)
-- **Vector Database**: ChromaDB (multi-collection)
-- **Embeddings**: Sentence Transformers (all-MiniLM-L6-v2)
-- **Framework**: LangChain 0.3.0+
-- **Interface**: Gradio 4.0+
-
-### Retrieval
-- **Dense Search**: Embeddings semânticos (384 dimensões)
-- **Sparse Search**: BM25 (keyword matching)
-- **Fusion**: Reciprocal Rank Fusion
-
-### Otimizações
-- **Quantização**: QLoRA 4-bit (bitsandbytes)
-- **Device**: Auto-detect (CUDA > MPS > CPU)
-- **Memory**: Lazy loading de collections
+**Backend**: FastAPI, LangChain 0.3+, ChromaDB, LangChain-Chroma  
+**LLM**: Meta Llama 3.2 3B Instruct  
+**Embeddings**: `paraphrase-multilingual-MiniLM-L12-v2` (50+ idiomas)  
+**Retrieval**: BM25 (rank-bm25) + Dense embeddings + RRF  
+**Frontend**: Next.js 14, TypeScript, shadcn/ui  
+**Deploy**: HuggingFace Spaces (backend) + Vercel (frontend)
 
 ---
 
-## 📦 Instalação
+## 📦 Instalação Local
 
 ### Pré-requisitos
 
-- Python 3.9+ (recomendado: 3.11 ou 3.12)
-- GPU NVIDIA com CUDA 11.8+ (opcional, mas recomendado)
-- 4GB+ VRAM (com quantização) ou 16GB+ (sem quantização)
-- 10GB+ espaço em disco
+- Python 3.11+
+- GPU NVIDIA com CUDA 11.8+ (recomendado) ou CPU
+- Token do HuggingFace com acesso ao Llama 3.2
+- Node.js 18+ (para o frontend)
 
-### 1. Clone o Repositório
+### Backend
 
 ```bash
+# 1. Clone o repositório
 git clone https://github.com/matheusIACreator/Langchain_Project.git
 cd Langchain_Project
-```
 
-### 2. Escolha a Versão
-
-**Para v1.0 (Galileu apenas - estável):**
-```bash
-git checkout main
-```
-
-**Para v2.0 (Multi-figura - desenvolvimento):**
-```bash
-git checkout feature/multi-figure-scaling
-```
-
-### 3. Crie Ambiente Virtual
-
-```bash
+# 2. Crie ambiente virtual
 python -m venv .venv
+.venv\Scripts\activate       # Windows
+source .venv/bin/activate    # Linux/Mac
 
-# Windows
-.venv\Scripts\Activate.ps1
+# 3. Instale PyTorch com CUDA
+pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
 
-# Linux/Mac
-source .venv/bin/activate
-```
-
-### 4. Instale Dependências
-
-```bash
-# Dependências principais
+# 4. Instale dependências
 pip install -r requirements.txt
 
-# Para GPU NVIDIA (CUDA 11.8)
-pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
-```
-
-### 5. Configure Variáveis de Ambiente
-
-```bash
-# Copie o template
+# 5. Configure o .env
 cp .env.example .env
+# Edite com seu HF_TOKEN e configurações
 
-# Edite e adicione seu token Hugging Face
-# HF_TOKEN=seu_token_aqui
+# 6. Crie o vector store
+python src/ingestion/pipeline.py
+python src/vectorstore.py
+
+# 7. Inicie o servidor
+uvicorn api:app --reload --port 8000
 ```
 
-**Obtenha seu token**: https://huggingface.co/settings/tokens
+### Frontend
 
-### 6. Prepare os Dados
-
-**Opção A: Usar dados existentes (v2.0)**
 ```bash
-# Já incluído no branch feature/multi-figure-scaling
-# Biografias de Galileu, Newton e Einstein
+cd src/frontend/science-chat
+npm install
+npm run dev
+# Acesse http://localhost:3000
 ```
 
-**Opção B: Baixar novas figuras (v2.0)**
-```bash
-python scripts/download_wikipedia_api.py --figures "Charles Darwin,Marie Curie" --language en --output-dir data/raw
+### Variáveis de Ambiente
+
+```dotenv
+HF_TOKEN=seu_token_aqui
+MODEL_NAME=meta-llama/Llama-3.2-3B-Instruct
+EMBEDDING_MODEL=sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2
+USE_QUANTIZATION=True
+QUANTIZATION_BITS=4
+NEXT_PUBLIC_API_URL=http://localhost:8000
 ```
 
 ---
 
-## 🎯 Como Usar
+## 🌍 Deploy
 
-### v1.0 - Chatbot do Galileu
+### Backend — HuggingFace Spaces
+
+O backend roda em container Docker com CPU básica. No primeiro startup, o vector store é criado automaticamente via `startup.sh`.
 
 ```bash
-# 1. Processar documento
-python src/document_loader.py
-
-# 2. Criar vector store
-python src/vectorstore.py --mode single
-
-# 3. Executar chatbot
-python main.py
+git remote add space https://huggingface.co/spaces/Shinigami4242557/science-chat-api
+git push space main
 ```
 
-### v2.0 - Sistema Multi-Figura
-
-```bash
-# 1. Processar todas as biografias
-python src/ingestion/pipeline.py
-
-# 2. Criar multi-collection vector store
-python src/vectorstore.py --mode multi
-
-# 3. Testar RAG chain completa
-python src/chains/rag_chain_multi.py
-
-# 4. Executar interface (em desenvolvimento)
-python main.py
+Variável necessária no Space (Settings → Secrets):
+```
+HF_TOKEN=seu_token_aqui
 ```
 
-### Testes Individuais de Componentes
+### Frontend — Vercel
+
+Deploy automático via GitHub. Variável necessária no Vercel:
+```
+NEXT_PUBLIC_API_URL=https://shinigami4242557-science-chat-api.hf.space
+```
+
+---
+
+## 🔌 API Endpoints
+
+| Método | Endpoint | Descrição |
+|--------|----------|-----------|
+| GET | `/health` | Health check |
+| GET | `/figures` | Lista figuras disponíveis |
+| POST | `/chat` | Envia mensagem e recebe resposta |
+| DELETE | `/conversation/{session_id}` | Limpa histórico da sessão |
+| GET | `/stats` | Estatísticas do sistema |
+
+### Exemplo
 
 ```bash
-# Testar Topic Router
-python src/retrieval/topic_router.py
-
-# Testar Hybrid Retriever
-python src/retrieval/hybrid_retriever.py
-
-# Baixar novas biografias
-python scripts/download_wikipedia_api.py --period enlightenment --language en
+curl -X POST https://shinigami4242557-science-chat-api.hf.space/chat \
+  -H "Content-Type: application/json" \
+  -d '{"message": "Quando Galileu nasceu?"}'
 ```
 
 ---
@@ -343,75 +266,59 @@ python scripts/download_wikipedia_api.py --period enlightenment --language en
 
 ```
 Langchain_Project/
-├── .env                        # Variáveis de ambiente (não versionado)
-├── .env.example               # Template de configuração
-├── .gitignore                 
-├── README.md                  # Este arquivo
-├── requirements.txt           # Dependências Python
-├── main.py                    # Interface principal (Gradio)
-│
+├── api.py                          # FastAPI — endpoints principais
+├── startup.sh                      # Script de inicialização do container
+├── Dockerfile                      # Deploy HF Spaces
+├── requirements.txt
 ├── config/
-│   ├── settings.py            # Configurações gerais do sistema
-│   └── experts_config.py      # Configuração de experts (v2.0)
-│
+│   └── settings.py                 # Device, modelo, prompts, geração
 ├── data/
-│   ├── raw/                   # Biografias organizadas por período
-│   │   ├── renaissance/
-│   │   │   └── galileo_galilei.txt (96 chunks)
-│   │   ├── enlightenment/
-│   │   │   └── isaac_newton.txt (127 chunks)
-│   │   └── modern_era/
-│   │       └── albert_einstein.txt (126 chunks)
-│   │
-│   ├── processed/             # Dados processados
-│   │   └── chunks/
-│   │
-│   └── vectorstore/           # ChromaDB multi-collection
-│       ├── renaissance/
-│       │   └── galileo_galilei/
-│       ├── enlightenment/
-│       │   └── isaac_newton/
-│       └── modern_era/
-│           └── albert_einstein/
-│
+│   └── raw/                        # Biografias em texto (Wikipedia)
+│       ├── renaissance/galileo_galilei.txt
+│       ├── enlightenment/isaac_newton.txt
+│       └── modern_era/albert_einstein.txt
 ├── src/
-│   ├── document_loader.py    # Processador de PDFs (v1.0)
-│   ├── vectorstore.py         # Vector store manager (v1.0 + v2.0)
-│   │
-│   ├── retrieval/             # Sistema de retrieval (v2.0)
-│   │   ├── topic_router.py           # Roteamento inteligente
-│   │   └── hybrid_retriever.py       # Dense + Sparse search
-│   │
-│   ├── ingestion/             # Pipeline de dados (v2.0)
-│   │   └── pipeline.py               # Processamento automatizado
-│   │
-│   ├── chains/                # RAG Chains
-│   │   ├── rag_chain.py              # Single-figure chain (v1.0)
-│   │   └── rag_chain_multi.py        # Multi-figure chain (v2.0)
-│   │
-│   ├── prompts/
-│   │   └── rag_prompts.py            # Templates de prompts
-│   │
+│   ├── ingestion/pipeline.py       # Chunking e processamento
+│   ├── vectorstore.py              # MultiCollectionVectorStore
+│   ├── retrieval/
+│   │   ├── topic_router.py         # Roteamento inteligente
+│   │   └── hybrid_retriever.py     # BM25 + dense + RRF
+│   ├── chains/
+│   │   └── rag_chain_multi.py      # Chain Multi-Figura v2.1
 │   ├── memory/
-│   │   └── conversation_memory.py    # Sistema de memória
-│   │
-│   └── utils/
-│       └── helpers.py
-│
-├── scripts/                   # Scripts utilitários (v2.0)
-│   └── download_wikipedia_api.py     # Download de biografias
-│
-├── docs/                      # Documentação detalhada (v2.0)
-│   ├── SCALING_PLAN.md               # Arquitetura completa
-│   └── NEXT_STEPS.md                 # Guia de implementação
-│
-├── notebooks/                 # Jupyter notebooks exploratórios
-│   ├── 01_data_exploration.ipynb
-│   ├── 02_vectorstore_setup.ipynb
-│   └── 03_rag_testing.ipynb
-│
-└── tests/                     # Testes unitários
-    └── test_*.py
+│   │   └── conversation_memory.py
+│   └── frontend/
+│       └── science-chat/           # Next.js
+├── tests/
+│   ├── test_e2e.py                 # 4 camadas de testes
+│   └── test_retrieval_metrics.py   # MRR e NDCG
+└── scripts/
+    └── download_wikipedia_api.py   # Ingestão via Wikipedia API
+```
+
+---
+
+## 🧪 Testes e Métricas
+
+O sistema foi avaliado com 5 camadas de testes antes do deploy:
+
+| Camada | Escopo | Resultado |
+|--------|--------|-----------|
+| 1 — Topic Router | Roteamento sem GPU | ✅ |
+| 2 — Memória | Conversação sem GPU | ✅ |
+| 3 — Hybrid Retriever | Retrieval sem LLM | ✅ |
+| 4 — Chain E2E | Pipeline completo | ✅ |
+| 5 — MRR / NDCG | Qualidade do retrieval | MRR = 1.0 |
+
+```bash
+# Testes sem LLM (rápido)
+pytest tests/test_e2e.py -v -m "not llm"
+
+# Métricas de retrieval
+pytest tests/test_retrieval_metrics.py -v
+
+# Tudo incluindo LLM
+pytest tests/test_e2e.py -v
 ```
 
 ---
@@ -420,396 +327,109 @@ Langchain_Project/
 
 ### GPU / CPU
 
-O sistema detecta automaticamente o melhor device:
-
 ```python
-# Prioridade: CUDA > MPS (Mac M1/M2) > CPU
-
-# Para forçar um device específico:
-# No .env:
+# Detecção automática: CUDA > MPS > CPU
+# Para forçar device no .env:
 DEVICE=cuda  # ou 'cpu', 'mps'
 ```
 
 ### Quantização (QLoRA)
 
-Para GPUs com 4GB VRAM (como RTX 3050):
-
-```python
-# No .env:
-USE_QUANTIZATION=True
-QUANTIZATION_BITS=4  # 4-bit ou 8-bit
-```
-
-**Comparação de uso de memória:**
-
 | Configuração | VRAM | Qualidade | Velocidade |
 |--------------|------|-----------|------------|
-| FP16 (sem quantização) | ~16GB | 100% | 100% |
-| 8-bit (INT8) | ~8GB | ~98% | ~85% |
-| **4-bit (NF4/QLoRA)** | **~4GB** | **~95%** | **~70%** |
+| FP16 (sem quantização) | ~6GB | 100% | 100% |
+| 8-bit (INT8) | ~4GB | ~98% | ~85% |
+| **4-bit (NF4/QLoRA)** | **~2GB** | **~95%** | **~70%** |
 
-### Chunking
-
-Ajuste o tamanho dos chunks:
+### Parâmetros de Geração
 
 ```python
 # Em config/settings.py:
-CHUNK_SIZE = 1000        # Caracteres por chunk
-CHUNK_OVERLAP = 200      # Overlap para manter contexto
+GENERATION_KWARGS = {
+    "max_new_tokens": 1024,
+    "temperature": 0.3,
+    "top_p": 0.9,
+    "do_sample": True,
+    "repetition_penalty": 1.2,
+}
 ```
-
-### Retrieval
-
-Número de documentos recuperados:
-
-```python
-# Em config/settings.py:
-TOP_K_DOCUMENTS = 4      # Documentos por busca
-```
-
-### Memory
-
-Tamanho da janela de memória:
-
-```python
-# Em src/chains/rag_chain_multi.py:
-self.memory = GalileuConversationMemory(
-    memory_type="window",
-    k=5  # Últimas 5 interações
-)
-```
-
----
-
-## 🧪 Exemplos de Uso
-
-### Single-Figure Query (v1.0)
-
-```python
-from src.chains.rag_chain import GalileuRAGChain
-
-chain = GalileuRAGChain()
-
-response = chain.chat("Quais foram as principais descobertas de Galileu?")
-print(response)
-# Output: "Galileu Galilei fez várias descobertas revolucionárias..."
-```
-
-### Multi-Figure Query (v2.0)
-
-```python
-from src.chains.rag_chain_multi import MultiFigureRAGChain
-
-chain = MultiFigureRAGChain()
-
-# Query sobre figura específica
-response = chain.chat("Quando Newton nasceu?")
-
-# Query comparativa
-response = chain.chat("Compare as teorias de gravidade de Newton e Einstein")
-
-# Query com follow-up (usa memória)
-response = chain.chat("Quem foi Galileu?")
-response = chain.chat("Quais foram suas principais invenções?")  # Sabe que é sobre Galileu
-```
-
-### Download de Novas Figuras
-
-```bash
-# Download individual
-python scripts/download_wikipedia_api.py \
-    --figures "Marie Curie" \
-    --language en \
-    --output-dir data/raw/modern_era
-
-# Download por período
-python scripts/download_wikipedia_api.py \
-    --period enlightenment \
-    --language en
-
-# Download de múltiplas figuras
-python scripts/download_wikipedia_api.py \
-    --figures "Charles Darwin,Nikola Tesla,Marie Curie" \
-    --language en
-```
-
----
-
-## 📊 Estatísticas e Métricas
-
-### Dados Processados (v2.0)
-
-```
-3 períodos históricos
-3 figuras científicas
-349 chunks totais
-~242KB de texto original
-~126,000 embeddings (349 chunks × 384 dimensões)
-```
-
-### Performance
-
-```
-Busca semântica: ~50ms
-Busca BM25: ~20ms
-Hybrid fusion: ~10ms
-LLM generation (4-bit): ~2-3s
-Total query end-to-end: ~3-4s
-```
-
-### Modelo
-
-```
-LLM: Llama-3.1-8B-Instruct
-Quantização: 4-bit NF4
-VRAM Usage: ~4GB
-Embeddings: all-MiniLM-L6-v2 (384 dims)
-Vector DB: ChromaDB (SQLite backend)
-```
-
----
-
-## 🚦 Roadmap
-
-### ✅ Fase 1: Fundação (Concluída)
-- [x] Sistema RAG básico com Galileu
-- [x] Arquitetura de scaling documentada
-- [x] Topic routing implementado
-- [x] Hybrid retrieval implementado
-- [x] Multi-collection vector store
-- [x] Pipeline de ingestão
-- [x] 3 figuras históricas adicionadas
-
-### 🚧 Fase 2: Integração (Em Progresso - 80%)
-- [x] RAG Chain multi-figura
-- [x] Roteamento integrado
-- [x] Memória conversacional
-- [ ] Interface Gradio atualizada
-- [ ] Testes end-to-end completos
-
-### 📅 Fase 3: Mixture of Experts (Planejado)
-- [ ] Implementar sistema MoE
-- [ ] Fine-tune experts especializados
-  - Physics Expert
-  - Biography Expert
-  - Astronomy Expert
-- [ ] Lazy loading de modelos
-- [ ] Benchmarks de performance
-
-### 📅 Fase 4: Qualidade e Produção (Planejado)
-- [ ] Métricas de precisão histórica
-- [ ] Validação de citações
-- [ ] Sistema de feedback do usuário
-- [ ] Interface web aprimorada
-- [ ] Deploy (Docker + API REST)
-- [ ] Documentação completa de API
-
-### 📅 Fase 5: Expansão (Futuro)
-- [ ] 10-15 figuras históricas
-- [ ] Suporte multilingual (PT, ES, FR)
-- [ ] Busca temporal (timeline)
-- [ ] Visualizações interativas
-- [ ] Mobile app
-
----
-
-## 🧠 Conceitos Técnicos Explicados
-
-### O que é RAG?
-
-**Retrieval-Augmented Generation** combina:
-1. **Retrieval**: Busca de informações relevantes em base de conhecimento
-2. **Generation**: LLM gera resposta usando as informações encontradas
-
-**Vantagens sobre LLM puro:**
-- ✅ Informações atualizadas (não limitado ao training cutoff)
-- ✅ Cita fontes específicas
-- ✅ Menos alucinações
-- ✅ Controle sobre conhecimento usado
-
-### Dense vs Sparse Retrieval
-
-**Dense (Semantic Search):**
-- Usa embeddings vetoriais (384 dimensões)
-- Entende significado e contexto
-- Bom para: queries conceituais, sinônimos
-
-**Sparse (BM25):**
-- Usa term frequency × inverse document frequency
-- Busca palavras exatas
-- Bom para: nomes próprios, datas, termos específicos
-
-**Hybrid = Melhor dos dois mundos!**
-
-### Por que Multi-Collection?
-
-**Single Collection** (todos juntos):
-```
-❌ Mistura contextos de diferentes figuras
-❌ Busca menos precisa
-❌ Difícil manter/atualizar
-```
-
-**Multi-Collection** (separados):
-```
-✅ Contextos isolados
-✅ Busca mais precisa
-✅ Fácil adicionar/remover figuras
-✅ Permite comparações controladas
-```
-
-### Conversation Memory
-
-Mantém contexto para perguntas de follow-up:
-
-```
-User: "Quando Galileu nasceu?"
-Bot: "Em 1564"
-User: "E onde ele morreu?"  ← Sabe que "ele" = Galileu
-Bot: "Em Arcetri, perto de Florença"
-```
-
-**Window Memory (k=5)**: Mantém últimas 5 interações para não estourar limite de tokens.
 
 ---
 
 ## 🐛 Troubleshooting
 
-### Erro: "CUDA out of memory"
-
-**Solução 1**: Usar quantização 4-bit
+**CUDA não detectado:**
 ```bash
-# No .env:
-USE_QUANTIZATION=True
-QUANTIZATION_BITS=4
-```
-
-**Solução 2**: Reduzir batch size
-```python
-# Em config/settings.py:
-GENERATION_KWARGS = {
-    "max_new_tokens": 256,  # Reduzir de 512
-}
-```
-
-### Erro: "Vector store not found"
-
-```bash
-# Recriar vector store:
-python src/vectorstore.py --mode multi
-```
-
-### Erro: "HF_TOKEN not found"
-
-```bash
-# 1. Verificar .env existe
-cat .env
-
-# 2. Adicionar token
-echo "HF_TOKEN=seu_token_aqui" >> .env
-
-# 3. Obter token em: https://huggingface.co/settings/tokens
-```
-
-### Performance Lenta
-
-**Causas comuns:**
-- CPU mode (sem GPU)
-- Modelo sem quantização
-- Muitos documentos sendo recuperados
-
-**Soluções:**
-```bash
-# 1. Verificar device
 python -c "import torch; print(torch.cuda.is_available())"
-
-# 2. Ativar quantização (ver seção Configuração)
-
-# 3. Reduzir TOP_K_DOCUMENTS em config/settings.py
+# Se False: reinstalar com --index-url https://download.pytorch.org/whl/cu118
 ```
 
-### Respostas Genéricas / Alucinações
+**Vector store não encontrado:**
+```bash
+python src/ingestion/pipeline.py
+python src/vectorstore.py
+```
 
-**Causas:**
-- Poucos documentos relevantes
-- Chunks muito pequenos/grandes
-- LLM não seguindo contexto
-
-**Soluções:**
+**Respostas repetitivas:**
 ```python
-# 1. Aumentar TOP_K_DOCUMENTS
-TOP_K_DOCUMENTS = 6  # Era 4
-
-# 2. Ajustar chunk size
-CHUNK_SIZE = 1200  # Era 1000
-CHUNK_OVERLAP = 250  # Era 200
-
-# 3. Melhorar prompt (src/prompts/rag_prompts.py)
+# Aumentar repetition_penalty em config/settings.py
+"repetition_penalty": 1.3
 ```
+
+**Respostas em inglês para queries em português:**
+```python
+# Verificar EMBEDDING_MODEL em settings.py
+# Deve ser: paraphrase-multilingual-MiniLM-L12-v2
+```
+
+---
+
+## 🗺️ Roadmap
+
+- [x] Sistema RAG básico (Galileu)
+- [x] Arquitetura multi-figura
+- [x] Hybrid retrieval (BM25 + dense)
+- [x] Embedding multilingual
+- [x] Frontend Next.js
+- [x] Deploy (HF Spaces + Vercel)
+- [x] Testes E2E com MRR/NDCG
+- [ ] Streaming de respostas
+- [ ] Mais figuras históricas (Darwin, Curie, Tesla)
+- [ ] Histórico de conversas persistente
+- [ ] Backend em GPU para respostas mais rápidas
 
 ---
 
 ## 🤝 Contribuindo
 
-Contribuições são bem-vindas! 
-
-### Como Contribuir
-
 1. Fork o projeto
-2. Crie uma branch para sua feature (`git checkout -b feature/NovaFigura`)
-3. Commit suas mudanças (`git commit -m 'Add: Marie Curie biography'`)
-4. Push para a branch (`git push origin feature/NovaFigura`)
+2. Crie uma branch (`git checkout -b feature/NovaFigura`)
+3. Commit (`git commit -m 'Add: Marie Curie biography'`)
+4. Push (`git push origin feature/NovaFigura`)
 5. Abra um Pull Request
 
-### Tipos de Contribuições
+---
 
-- 📚 Adicionar novas figuras históricas
-- 🐛 Reportar e corrigir bugs
-- 📝 Melhorar documentação
-- ✨ Propor novas features
-- 🧪 Adicionar testes
-- 🎨 Melhorar interface
+## 📚 Referências
 
-### Guidelines
-
-- Código bem documentado (docstrings)
-- Seguir estrutura existente
-- Testar antes de submeter
-- Atualizar README se necessário
+- [Retrieval-Augmented Generation (RAG)](https://arxiv.org/abs/2005.11401)
+- [QLoRA: Efficient Finetuning of Quantized LLMs](https://arxiv.org/abs/2305.14314)
+- [Dense Passage Retrieval](https://arxiv.org/abs/2004.04906)
+- [LangChain Documentation](https://python.langchain.com/)
+- [ChromaDB Documentation](https://docs.trychroma.com/)
 
 ---
 
 ## 📚 Documentação Adicional
 
 - **[SCALING_PLAN.md](docs/SCALING_PLAN.md)**: Arquitetura completa e estratégia de scaling
-- **[NEXT_STEPS.md](docs/NEXT_STEPS.md)**: Guia de implementação fase-a-fase
 - **[QLORA.MD](QLORA.MD)**: Guia de quantização e otimização de memória
-
----
-
-## 📖 Referências e Recursos
-
-### Papers
-- [Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks](https://arxiv.org/abs/2005.11401)
-- [QLoRA: Efficient Finetuning of Quantized LLMs](https://arxiv.org/abs/2305.14314)
-- [Dense Passage Retrieval for Open-Domain Question Answering](https://arxiv.org/abs/2004.04906)
-
-### Frameworks e Bibliotecas
-- [LangChain Documentation](https://python.langchain.com/)
-- [ChromaDB Documentation](https://docs.trychroma.com/)
-- [Hugging Face Transformers](https://huggingface.co/docs/transformers)
-- [Sentence Transformers](https://www.sbert.net/)
-
-### Tutoriais Relacionados
-- [Building a RAG System from Scratch](https://www.langchain.com/tutorials)
-- [Vector Databases Explained](https://www.pinecone.io/learn/vector-database/)
-- [LLM Quantization Guide](https://huggingface.co/docs/transformers/main_classes/quantization)
 
 ---
 
 ## 📝 Licença
 
-Este projeto é de uso **educacional** e foi desenvolvido para demonstração de técnicas de RAG e NLP.
+MIT License — veja [LICENSE](LICENSE) para detalhes.
 
 ---
 
@@ -819,43 +439,24 @@ Este projeto é de uso **educacional** e foi desenvolvido para demonstração de
 
 - 🌐 GitHub: [@matheusIACreator](https://github.com/matheusIACreator)
 - 💼 LinkedIn: [Matheus Masago](https://www.linkedin.com/in/matheus-masago/)
-- 📧 Email: [contato via LinkedIn]
 
 ---
 
 ## 🙏 Agradecimentos
 
-Este projeto foi desenvolvido com apoio de:
-
-- **[LangChain](https://www.langchain.com/)** - Framework RAG
-- **[Hugging Face](https://huggingface.co/)** - Modelos e Embeddings
-- **[ChromaDB](https://www.trychroma.com/)** - Vector Database
-- **[Meta AI](https://ai.meta.com/)** - Llama Models
-- **[Anthropic](https://www.anthropic.com/)** - Claude AI (development assistance)
-- **[Wikipedia](https://www.wikipedia.org/)** - Fonte de dados históricos
-
----
-
-## 🌟 Star History
-
-Se este projeto foi útil para você, considere dar uma ⭐!
-
-[![Star History Chart](https://api.star-history.com/svg?repos=matheusIACreator/Langchain_Project&type=Date)](https://star-history.com/#matheusIACreator/Langchain_Project&Date)
-
----
-
-## 📞 Contato e Suporte
-
-- **Issues**: [GitHub Issues](https://github.com/matheusIACreator/Langchain_Project/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/matheusIACreator/Langchain_Project/discussions)
-- **Email**: Disponível via LinkedIn
+- **[LangChain](https://www.langchain.com/)** — Framework RAG
+- **[Hugging Face](https://huggingface.co/)** — Modelos e Embeddings
+- **[ChromaDB](https://www.trychroma.com/)** — Vector Database
+- **[Meta AI](https://ai.meta.com/)** — Llama Models
+- **[Anthropic](https://www.anthropic.com/)** — Claude AI (development assistance)
+- **[Wikipedia](https://www.wikipedia.org/)** — Fonte de dados históricos
 
 ---
 
 <div align="center">
 
-**⚡ Construído com Python, LangChain, e muita ☕**
+**⚡ Construído com Python, LangChain, Next.js e muita ☕**
 
-[⬆ Voltar ao topo](#-historical-figures-rag-system)
+[⬆ Voltar ao topo](#-science-chat--historical-figures-rag-system)
 
 </div>

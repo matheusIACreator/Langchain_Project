@@ -4,6 +4,7 @@
 langchain>=0.3.0
 langchain-community>=0.3.0
 langchain-core>=0.3.0
+langchain-chroma>=0.1.0
 langchain-text-splitters>=0.3.0
 langchain-huggingface>=0.1.0
 
@@ -45,6 +46,8 @@ pydantic-settings>=2.0.0
 # ══════════════════════════════════════════════════════
 numpy>=1.24.0
 pandas>=2.0.0
+fastapi>=0.110.0
+uvicorn>=0.29.0
 tqdm>=4.65.0
 requests>=2.31.0
 numexpr>=2.10.0
@@ -63,14 +66,14 @@ beautifulsoup4>=4.12.0
 # ══════════════════════════════════════════════════════
 # Interface
 # ══════════════════════════════════════════════════════
-gradio>=4.0.0
+#gradio>=4.0.0
 
 # ══════════════════════════════════════════════════════
 # Testing — v2.0
 # ══════════════════════════════════════════════════════
-pytest>=8.0.0
-pytest-asyncio>=0.23.0
-pytest-timeout>=2.3.0     # Timeout por teste (evita travar em testes de LLM)
+#pytest>=8.0.0
+#pytest-asyncio>=0.23.0
+#pytest-timeout>=2.3.0     # Timeout por teste (evita travar em testes de LLM)
 
 # ══════════════════════════════════════════════════════
 # PyTorch — instalar manualmente conforme seu hardware:
@@ -89,14 +92,14 @@ torchaudio>=2.0.0
 # ══════════════════════════════════════════════════════
 # Notebooks (opcional)
 # ══════════════════════════════════════════════════════
-jupyter>=1.0.0
-ipykernel>=6.25.0
-notebook>=7.0.0
+#jupyter>=1.0.0
+#ipykernel>=6.25.0
+#notebook>=7.0.0
 
 # ══════════════════════════════════════════════════════
 # Visualizações (opcional, para análise de métricas futuras)
 # ══════════════════════════════════════════════════════
-plotly>=5.18.0
+#plotly>=5.18.0
 
 # ══════════════════════════════════════════════════════
 # NLP avançado (opcional — para futura extração de entidades)

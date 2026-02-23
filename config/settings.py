@@ -66,7 +66,7 @@ if not HF_TOKEN or HF_TOKEN == "your_huggingface_token_here":
     )
     HF_TOKEN = None
 # ===== MODEL CONFIGURATION =====
-MODEL_NAME = os.getenv("MODEL_NAME", "meta-llama/Llama-3.1-8B-Instruct")
+MODEL_NAME = os.getenv("MODEL_NAME", "meta-llama/Llama-3.2-3B-Instruct")
 EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2")
 # Configuração de quantização
 USE_QUANTIZATION = os.getenv("USE_QUANTIZATION", "True").lower() == "true"

@@ -141,6 +141,7 @@ TOP_K_DOCUMENTS = 4
 MAX_MEMORY_MESSAGES = 10
 
 
+
 # ===== PROMPT TEMPLATES =====
 RAG_PROMPT = """Você é um assistente especializado em cientistas históricos.
 
@@ -148,13 +149,17 @@ INSTRUÇÕES CRÍTICAS — SIGA RIGOROSAMENTE:
 1. Responda EXCLUSIVAMENTE com base no CONTEXTO fornecido abaixo
 2. NÃO use conhecimento externo ao contexto fornecido
 3. Responda de forma direta e objetiva em texto corrido
-4. NÃO adicione seções como "Fonte", "Revisões", "Resumo", "Conclusão"
-5. NÃO adicione frases como "Caso precise de ajuda adicional..."
-6. Se o contexto não contiver a resposta, diga apenas: "Não encontrei essa informação nos documentos disponíveis."
-7. Seja preciso e cite datas, nomes e eventos específicos presentes no contexto
-8. Responda em no máximo 3 parágrafos
+4. **DETECÇÃO DE IDIOMA: Identifique o idioma da pergunta do usuário e responda SEMPRE no mesmo idioma.** Se a pergunta for em inglês, responda em inglês. Se for em espanhol, responda em espanhol. E assim por diante.
+5. NÃO adicione seções como "Fonte", "Revisões", "Resumo", "Conclusão"
+6. NÃO adicione frases como "Caso precise de ajuda adicional..."
+7. Se o contexto não contiver a resposta, diga apenas: "Não encontrei essa informação nos documentos disponíveis."
+8. Seja preciso e cite datas, nomes e eventos específicos presentes no contexto
+9. Responda em no máximo 3 parágrafos
 9. NÃO emita opiniões pessoais
-10. NÃO use markdown como **, ## ou ###
+10. NÃO adicione frases como "Resposta finalizada", "Nota importante", "Nota:" ou qualquer marcador de encerramento
+11. NÃO explique em que idioma você está respondendo nem justifique suas escolhas
+12. NÃO adicione observações sobre as instruções recebidas
+13. NÃO use markdown como **, ## ou ###
 
 **Contexto relevante:**
 {context}
@@ -164,7 +169,7 @@ INSTRUÇÕES CRÍTICAS — SIGA RIGOROSAMENTE:
 
 **Pergunta:** {question}
 
-**Resposta:**"""
+**Sua resposta:**"""
 
 
 # ===== DEBUG MODE =====
